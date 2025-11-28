@@ -30,7 +30,6 @@ function onTileClick(e) {
 	userGuesses[index] = color;
 }
 
-// Cycle CSS colors
 function cycleTileColor(tile) {
 	const currentColor = tile.style.backgroundColor;
 	const nextColor =
@@ -50,7 +49,6 @@ function startGame() {
 	flashSequence(sequence, 0);
 }
 
-// Generate sequence with no repeat indexes
 function generateUniqueSequence(length) {
 	const available = Array.from({ length: 9 }, (_, i) => i);
 	const seq = [];
@@ -65,7 +63,6 @@ function generateUniqueSequence(length) {
 	return seq;
 }
 
-// Recursive flash — with animation
 function flashSequence(seq, i) {
 	if (i >= seq.length) {
 		acceptingInput = true;
@@ -95,19 +92,36 @@ function checkGuesses() {
 		acceptingInput = false;
 		submitBtn.disabled = true;
 
-		const correctColors = sequence.map((s) => s.color);
-		const userColors = userGuesses.filter((c) => c !== null);
+		const expectedColors = new Array(9).fill(null);
+		sequence.forEach(({ index, color }) => {
+			expectedColors[index] = color;
+		});
 
-		const allCorrect =
-			correctColors.every((color) => userColors.includes(color)) &&
-			correctColors.length === userColors.length;
+		if (!userGuesses || userGuesses.length !== 9) {
+			userGuesses = new Array(9).fill(null);
+		}
+
+		let allCorrect = true;
+		for (let i = 0; i < 9; i++) {
+			const expected = expectedColors[i];
+			const actual = userGuesses[i] ?? null;
+
+			if (expected !== actual) {
+				allCorrect = false;
+				break;
+			}
+		}
 
 		if (allCorrect) {
 			score++;
 			scoreDisplay.textContent = `Score: ${score}`;
-			Swal.fire("Correct!", "You matched all colors!", "success");
+			Swal.fire("Correct!", "You matched all the tiles correctly!", "success");
 		} else {
-			Swal.fire("Wrong!", "Try again!", "error");
+			Swal.fire(
+				"Wrong!",
+				"Your tile colors did not match the pattern.",
+				"error"
+			);
 		}
 
 		resetTileColors();
