@@ -1,5 +1,7 @@
 const grid = document.getElementById("grid");
 const startBtn = document.getElementById("start-btn");
+const submitBtn = document.getElementById("submit-btn");
+const difficultySelect = document.getElementById("difficulty");
 const scoreDisplay = document.getElementById("score");
 
 const COLORS = ["red", "blue", "green", "yellow"];
@@ -14,6 +16,7 @@ function createGrid() {
 		const tile = document.createElement("div");
 		tile.classList.add("tile");
 		tile.dataset.index = i;
+		tile.style.backgroundColor = "#ccc";
 		tile.addEventListener("click", onTileClick);
 		grid.appendChild(tile);
 	}
@@ -27,6 +30,7 @@ function onTileClick(e) {
 	userGuesses[index] = color;
 }
 
+// Cycle CSS colors
 function cycleTileColor(tile) {
 	const currentColor = tile.style.backgroundColor;
 	const nextColor =
@@ -36,42 +40,60 @@ function cycleTileColor(tile) {
 }
 
 function startGame() {
-	sequence = generateSequence();
+	const difficulty = parseInt(difficultySelect.value, 10);
+	sequence = generateUniqueSequence(difficulty);
 	userGuesses = new Array(9).fill(null);
 	acceptingInput = false;
+	submitBtn.disabled = true;
+
+	resetTileColors();
 	flashSequence(sequence, 0);
 }
 
-function generateSequence() {
-	const newSequence = [];
-	for (let i = 0; i < 4; i++) {
-		newSequence.push({
-			index: Math.floor(Math.random() * 9),
-			color: COLORS[Math.floor(Math.random() * COLORS.length)],
-		});
+// Generate sequence with no repeat indexes
+function generateUniqueSequence(length) {
+	const available = Array.from({ length: 9 }, (_, i) => i);
+	const seq = [];
+
+	for (let i = 0; i < length; i++) {
+		const randIdx = Math.floor(Math.random() * available.length);
+		const tileIndex = available.splice(randIdx, 1)[0];
+		const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+		seq.push({ index: tileIndex, color });
 	}
-	return newSequence;
+
+	return seq;
 }
 
+// Recursive flash — with animation
 function flashSequence(seq, i) {
 	if (i >= seq.length) {
 		acceptingInput = true;
+		submitBtn.disabled = false;
 		return;
 	}
+
 	const { index, color } = seq[i];
 	const tile = grid.children[index];
-	const prevColor = tile.style.backgroundColor;
+
+	tile.classList.add("flash");
 
 	tile.style.backgroundColor = color;
 	setTimeout(() => {
 		tile.style.backgroundColor = "#ccc";
-		setTimeout(() => flashSequence(seq, i + 1), 300);
+
+		tile.classList.remove("flash");
+
+		setTimeout(() => flashSequence(seq, i + 1), 350);
 	}, 600);
 }
 
 function checkGuesses() {
 	try {
 		if (!sequence.length) throw new Error("No sequence to check!");
+
+		acceptingInput = false;
+		submitBtn.disabled = true;
 
 		const correctColors = sequence.map((s) => s.color);
 		const userColors = userGuesses.filter((c) => c !== null);
@@ -87,17 +109,21 @@ function checkGuesses() {
 		} else {
 			Swal.fire("Wrong!", "Try again!", "error");
 		}
+
+		resetTileColors();
+		userGuesses = new Array(9).fill(null);
 	} catch (err) {
 		Swal.fire("Error", err.message, "warning");
 	}
 }
 
-startBtn.addEventListener("click", startGame);
-createGrid();
+function resetTileColors() {
+	Array.from(grid.children).forEach((tile) => {
+		tile.style.backgroundColor = "#ccc";
+	});
+}
 
-document.addEventListener("keydown", (e) => {
-	if (e.key === "Enter" && acceptingInput) {
-		acceptingInput = false;
-		checkGuesses();
-	}
-});
+startBtn.addEventListener("click", startGame);
+submitBtn.addEventListener("click", checkGuesses);
+
+createGrid();

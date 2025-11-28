@@ -10,8 +10,20 @@
 	<body>
 		<div class="game-container">
 			<h1>Memory Game</h1>
+			<label for="difficulty">Difficulty:</label>
+			<select id="difficulty">
+				<option value="5">Easy (5 tiles)</option>
+				<option value="7">Medium (7 tiles)</option>
+				<option value="9">Hard (9 tiles)</option>
+			</select>
+
 			<p id="score">Score: 0</p>
-			<button id="start-btn">Start Game</button>
+
+			<div class="buttons">
+				<button id="start-btn">Start Game</button>
+				<button id="submit-btn" disabled>Submit Guess</button>
+			</div>
+
 			<div id="grid" class="grid"></div>
 		</div>
 
